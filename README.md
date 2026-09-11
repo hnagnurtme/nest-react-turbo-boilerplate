@@ -4,6 +4,8 @@ A multi-tenant, enterprise-grade starting point for B2B SaaS, marketplaces and i
 
 It contains **no business logic**. There is exactly one reference feature slice (`items`) whose only job is to be copied. Everything else is infrastructure, and every architectural rule it claims to enforce is enforced by a machine — the type system, the linter, a database constraint, or a CI gate.
 
+This file covers what the boilerplate guarantees and how to stand it up. For day-to-day commands, where new code goes, and the exact steps to add a feature, see **[`GUIDE.md`](GUIDE.md)**.
+
 ---
 
 ## What it guarantees
@@ -24,12 +26,13 @@ These seven properties are the reason the boilerplate exists. Each one is held u
 
 ## Prerequisites
 
-| Tool    | Version         | Notes                                                                 |
-| :------ | :-------------- | :-------------------------------------------------------------------- |
-| Node.js | ≥ 20.11         | `node --version`                                                      |
-| pnpm    | ≥ 10            | `corepack enable` is enough — the version is pinned in `package.json` |
-| Docker  | with Compose v2 | `docker compose version`                                              |
-| Git     | any             |                                                                       |
+| Tool                                    | Version         | Notes                                                                                  |
+| :-------------------------------------- | :-------------- | :------------------------------------------------------------------------------------- |
+| Node.js                                 | ≥ 20.11         | `node --version`                                                                       |
+| pnpm                                    | ≥ 10            | `corepack enable` is enough — the version is pinned in `package.json`                  |
+| Docker                                  | with Compose v2 | `docker compose version`                                                               |
+| Git                                     | any             |                                                                                        |
+| [`just`](https://github.com/casey/just) | any (optional)  | Not required — every recipe is a documented `pnpm`/`docker compose` command underneath |
 
 Nothing else needs installing. PostgreSQL and Redis run in containers.
 
@@ -48,6 +51,8 @@ docker compose up -d             # 3. start PostgreSQL 16 + Redis 7
 pnpm db:migrate                  # 4. create the schema, roles and RLS policies
 pnpm dev                         # 5. API and web, both in watch mode
 ```
+
+With [`just`](https://github.com/casey/just) installed, steps 1 and 3–5 collapse to `just fresh` (run `just bootstrap` yourself in between, since it's interactive) followed by `just dev`.
 
 - API: <http://localhost:3000>
 - Web: <http://localhost:5173>
@@ -91,11 +96,11 @@ The backend is a **modular monolith** in five layers. Imports may only point dow
 
 ## Commands
 
-Run all of these from the repository root.
+Run all of these from the repository root. If [`just`](https://github.com/casey/just) is installed, `just <recipe>` (e.g. `just dev`, `just check`) wraps the same commands with tab-completion and a couple of convenience recipes on top — run `just` with no arguments for the full list. Everything below still works directly through `pnpm` with no extra tooling required.
 
 | Command                             | What it does                                             |
 | :---------------------------------- | :------------------------------------------------------- |
-| `pnpm bootstrap`                        | Interactive first-run initialiser. Idempotent.           |
+| `pnpm bootstrap`                    | Interactive first-run initialiser. Idempotent.           |
 | `pnpm dev`                          | Everything in watch mode.                                |
 | `pnpm build`                        | Production build of every package, in dependency order.  |
 | `pnpm lint`                         | ESLint, including the architectural boundary rules.      |
@@ -195,7 +200,7 @@ Three things about that order are deliberate:
 - **`--build-arg` at image build time** — every `VITE_*` variable. Vite inlines these into the JavaScript bundle, so setting them in `.env` or `environment:` has no effect whatsoever. A staging build and a production build are two different images. Never put a secret in one.
 - **The edge proxy on the host** — TLS. The `api` and `web` containers bind to `127.0.0.1` and are reachable only through it. PostgreSQL and Redis publish no ports at all.
 
-Web and API are served from different sites, so authentication cookies are `SameSite=None; Secure` and are paired with double-submit CSRF tokens. Be aware that third-party cookies are blocked by Safari and Brave by default: if your users are not exclusively on Chrome or Edge, put both behind one hostname (`app.example.com` and `app.example.com/api`) with a single `location /api` block in the edge proxy, and switch the cookies back to `SameSite=Lax`. That change touches two files.
+Web and API are served from different sites, so the refresh cookie is `SameSite=None; Secure`, and CSRF protection is an Origin-header check plus a synchronizer token — not a cookie-based double-submit, since `document.cookie` can't read a cookie set by a different origin in the first place (see `GUIDE.md` §7). Be aware that third-party cookies are blocked by Safari and Brave by default: if your users are not exclusively on Chrome or Edge, put both behind one hostname (`app.example.com` and `app.example.com/api`) with a single `location /api` block in the edge proxy, and switch the refresh cookie back to `SameSite=Lax`. That change touches two files.
 
 ---
 
