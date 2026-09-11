@@ -37,7 +37,7 @@ export const backend = [
             { from: 'core', allow: ['config', 'common'] },
             { from: 'integrations', allow: ['config', 'common', 'core'] },
             { from: 'modules', allow: ['config', 'common', 'core', 'integrations', 'modules'] },
-            { from: 'root', allow: ['config', 'common', 'core', 'integrations', 'modules'] },
+            { from: 'root', allow: ['config', 'common', 'core', 'integrations', 'modules', 'root'] },
           ],
         },
       ],
