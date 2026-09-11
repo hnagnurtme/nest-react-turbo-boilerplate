@@ -30,3 +30,11 @@ export interface AppClsStore extends ClsStore {
  * leak to the next request that borrows the same pooled connection.
  */
 export const TENANT_SETTING = 'app.tenant_id';
+
+/**
+ * The narrower counterpart to TENANT_SETTING: identifies the acting user
+ * without picking a tenant. Only `memberships` reads it (see the migration),
+ * and only to answer "which tenants does this user belong to" — the one
+ * query that is legitimately cross-tenant by definition (doc 03 section 1).
+ */
+export const USER_SETTING = 'app.user_id';

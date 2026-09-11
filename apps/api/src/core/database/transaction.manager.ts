@@ -3,7 +3,7 @@ import { sql } from 'drizzle-orm';
 import { ClsService } from 'nestjs-cls';
 import { MissingTenantContextError } from '../errors';
 import { DATABASE, type AppDatabase, type Tx } from './drizzle.module';
-import { CLS_KEYS, TENANT_SETTING, type AppClsStore } from './tenant-context';
+import { CLS_KEYS, TENANT_SETTING, USER_SETTING, type AppClsStore } from './tenant-context';
 
 /**
  * The single gateway to the database (doc 02 section 2.2).
@@ -40,13 +40,29 @@ export class TransactionManager {
 
   /**
    * Cross-tenant work (platform admin, cron, relays). `app.tenant_id` is left
-   * unset, so RLS returns zero rows for app_runtime — a caller that needs to
-   * see across tenants must also connect with a role permitted to.
+   * unset, so RLS returns zero rows on every tenant-scoped table for
+   * app_runtime — a caller that needs to see across every tenant must
+   * connect with a role permitted to (there is none in this boilerplate; add
+   * one deliberately if a real cross-tenant admin view is ever needed).
    * `reason` is mandatory so the audit trail explains every use.
    */
   async runAsPlatform<T>(reason: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
     this.logger.warn({ reason }, 'Executing cross-tenant operation');
     return this.db.transaction(fn);
+  }
+
+  /**
+   * Narrower than `runAsPlatform`: identifies the request by user rather
+   * than tenant. Exists for exactly one legitimate cross-tenant read —
+   * "which tenants does this user belong to" (auth's login/me/switch-tenant,
+   * doc 03 section 1) — and only works because `memberships`' RLS policy has
+   * a matching `OR user_id = ...` clause. No other table grants this.
+   */
+  async runAsUser<T>(userId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
+    return this.db.transaction(async (tx) => {
+      await tx.execute(sql`SELECT set_config(${USER_SETTING}, ${userId}, true)`);
+      return fn(tx);
+    });
   }
 
   /** Escape hatch for statements that must not be wrapped, e.g. health probes. */

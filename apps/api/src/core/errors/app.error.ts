@@ -77,3 +77,57 @@ export class UpstreamTimeoutError extends AppError {
     super(`Upstream "${upstream}" did not respond within ${timeoutMs}ms`, { upstream, timeoutMs });
   }
 }
+
+export class InvalidCredentialsError extends AppError {
+  readonly code = ERROR_CODES.INVALID_CREDENTIALS;
+  readonly status = 401;
+
+  constructor() {
+    // Identical message for "no such email" and "wrong password" on purpose
+    // (doc 03 section 4) — distinguishing them lets an attacker enumerate
+    // registered accounts.
+    super('Invalid email or password');
+  }
+}
+
+export class RefreshTokenInvalidError extends AppError {
+  readonly code = ERROR_CODES.UNAUTHENTICATED;
+  readonly status = 401;
+
+  constructor() {
+    super('Refresh token is invalid or expired');
+  }
+}
+
+/**
+ * A refresh token that was already rotated came back a second time — the
+ * strongest signal the rotation scheme (doc 03 section 3) exists to catch.
+ * Either it leaked, or the legitimate client retried a request whose
+ * response never arrived; either way every token in the family is revoked.
+ */
+export class TokenReuseDetectedError extends AppError {
+  readonly code = ERROR_CODES.TOKEN_REUSE_DETECTED;
+  readonly status = 401;
+
+  constructor() {
+    super('Refresh token reuse detected; the session has been revoked');
+  }
+}
+
+export class CsrfValidationFailedError extends AppError {
+  readonly code = ERROR_CODES.CSRF_VALIDATION_FAILED;
+  readonly status = 403;
+
+  constructor() {
+    super('CSRF token missing or did not match');
+  }
+}
+
+export class TenantAccessDeniedError extends AppError {
+  readonly code = ERROR_CODES.TENANT_ACCESS_DENIED;
+  readonly status = 403;
+
+  constructor() {
+    super('You do not have an active membership in this tenant');
+  }
+}
