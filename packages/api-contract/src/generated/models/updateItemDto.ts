@@ -7,14 +7,8 @@
  */
 import type { ItemStatus } from './itemStatus';
 
-export interface Item {
-  id: string;
-  tenantId: string;
-  title: string;
-  /** @nullable */
-  description: string | null;
-  status: ItemStatus;
-  createdBy: string;
-  createdAt: string;
-  updatedAt: string;
+export interface UpdateItemDto {
+  title?: string;
+  description?: string;
+  status?: ItemStatus;
 }

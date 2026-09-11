@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { subject } from '@casl/ability';
-import { useDeleteItem, useItems, type Item } from '@repo/api-contract';
+import { useQueryClient } from '@tanstack/react-query';
+import { getItemsQueryKey, useDeleteItem, useItems, type Item } from '@repo/api-contract';
 import { PageHeader } from '@repo/ui/composites/page-header';
 import { EmptyState } from '@repo/ui/composites/empty-state';
 import { DataTable } from '@repo/ui/composites/data-table';
@@ -13,7 +14,15 @@ export function ItemsPage() {
   const [page, setPage] = useState(1);
   const [pendingDelete, setPendingDelete] = useState<Item | null>(null);
   const { data, isLoading } = useItems({ page, limit: 20 });
-  const deleteItem = useDeleteItem();
+  const queryClient = useQueryClient();
+  const deleteItem = useDeleteItem({
+    mutation: {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getItemsQueryKey() });
+        setPendingDelete(null);
+      },
+    },
+  });
 
   return (
     <div className="flex flex-col gap-6">
@@ -73,7 +82,7 @@ export function ItemsPage() {
         isLoading={deleteItem.isPending}
         onConfirm={() => {
           if (!pendingDelete) return;
-          deleteItem.mutate(pendingDelete.id, { onSuccess: () => setPendingDelete(null) });
+          deleteItem.mutate({ id: pendingDelete.id });
         }}
       />
     </div>

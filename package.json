@@ -20,7 +20,7 @@
     "db:migrate": "pnpm --filter @repo/api db:migrate",
     "db:seed": "pnpm --filter @repo/api db:seed",
     "db:studio": "pnpm --filter @repo/api db:studio",
-    "api:contract": "pnpm --filter @repo/api generate:openapi && pnpm --filter @repo/api-contract generate",
+    "api:contract": "pnpm --filter @repo/api generate:openapi && prettier --write packages/api-contract/openapi.json apps/api/openapi.json && pnpm --filter @repo/api-contract generate",
     "check:env": "tsx scripts/check-env-example.ts",
     "gen:module": "tsx scripts/gen-module.ts",
     "clean": "turbo run clean && rm -rf node_modules"

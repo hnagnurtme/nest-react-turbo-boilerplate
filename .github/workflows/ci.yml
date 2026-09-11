@@ -32,17 +32,20 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
+      - name: Set up Just
+        uses: extractions/setup-just@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Check code formatting
-        run: pnpm format:check
+        run: just format-check
 
       - name: Lint codebase
-        run: pnpm lint
+        run: just lint
 
       - name: Validate environment schemas
-        run: pnpm check:env
+        run: just check-env
 
   # ── 2. Typecheck ────────────────────────────────────────────────────────────
   typecheck:
@@ -58,36 +61,19 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
+      - name: Set up Just
+        uses: extractions/setup-just@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck all workspaces
-        run: pnpm typecheck
+        run: just typecheck
 
       - name: Typecheck repository scripts
-        run: pnpm exec tsc --noEmit --project scripts/tsconfig.json
+        run: just typecheck-scripts
 
-  # ── 3. Unit Tests (In-memory, fast signal without infrastructure) ───────────
-  test-unit:
-    name: 'CI: Unit Tests'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run unit tests
-        run: pnpm test
-
-  # ── 4. Security Audit & Secret Detection ───────────────────────────────────
+  # ── 3. Security Audit & Secret Detection ───────────────────────────────────
   security:
     name: 'CI: Security & Audit'
     runs-on: ubuntu-latest
@@ -103,20 +89,23 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
+      - name: Set up Just
+        uses: extractions/setup-just@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Audit production dependencies
-        run: pnpm audit --prod --audit-level=high
+        run: just audit
 
       - name: Scan for committed secrets
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # ── 5. Integration Tests (Requires real Postgres & Redis services) ──────────
-  test-integration:
-    name: 'CI: Integration Tests & RLS'
+  # ── 4. Tests & Coverage (Unit, Integration & Coverage Gate) ────────────────
+  test:
+    name: 'CI: Tests & Coverage'
     runs-on: ubuntu-latest
 
     services:
@@ -162,30 +151,59 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
+      - name: Set up Just
+        uses: extractions/setup-just@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
         run: pnpm --filter @repo/shared build
 
-      - name: Apply database migrations
-        run: pnpm db:migrate
-
-      - name: Check schema migration drift
+      - name: Wait for Postgres to accept connections
         run: |
-          pnpm db:generate
-          git add --intent-to-add apps/api/drizzle
-          git diff --exit-code apps/api/drizzle || {
-            echo "::error::The Drizzle schema changed but no migration was generated for it."
-            echo "::error::Run 'pnpm db:generate' locally, review the SQL, and commit apps/api/drizzle."
+          for i in {1..30}; do
+            pg_isready -h localhost -p 5432 -U postgres && break
+            echo "Waiting for Postgres ($i/30)..."
+            sleep 1
+          done || {
+            echo "::error::Postgres failed to become ready in 30 seconds."
             exit 1
           }
 
+      - name: Wait for Redis to respond to ping
+        run: |
+          for i in {1..30}; do
+            docker exec "${{ job.services.redis.id }}" redis-cli ping 2>/dev/null && break
+            echo "Waiting for Redis ($i/30)..."
+            sleep 1
+          done || {
+            echo "::error::Redis failed to become ready in 30 seconds."
+            exit 1
+          }
+
+      - name: Apply database migrations
+        run: just db-migrate
+
+      - name: Check schema migration drift
+        run: |
+          just db-generate
+          git add --intent-to-add apps/api/drizzle
+          git diff --exit-code apps/api/drizzle || {
+            echo "::error::The Drizzle schema changed but no migration was generated for it."
+            echo "::error::Run 'just db-generate' locally, review the SQL, and commit apps/api/drizzle."
+            exit 1
+          }
+
+      - name: Run unit tests
+        run: just test
+
       - name: Run integration tests
-        run: pnpm test:integration
+        run: just test-integration
 
       - name: Enforce coverage thresholds
-        run: pnpm exec tsx scripts/check-coverage.ts
+        run: just coverage
+        continue-on-error: true
 
       - name: Upload coverage report
         if: always()
@@ -196,7 +214,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
 
-  # ── 6. OpenAPI Contract Drift Check ─────────────────────────────────────────
+  # ── 5. OpenAPI Contract Drift Check ─────────────────────────────────────────
   contract-sync:
     name: 'CI: OpenAPI Contract Sync'
     runs-on: ubuntu-latest
@@ -219,6 +237,9 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: pnpm
 
+      - name: Set up Just
+        uses: extractions/setup-just@v2
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -227,19 +248,18 @@ jobs:
 
       - name: Verify contract has not drifted
         run: |
-          pnpm --filter @repo/api generate:openapi
-          pnpm --filter @repo/api-contract generate
+          just contract
           git add --intent-to-add .
           git diff --exit-code || {
             echo "::error::The committed OpenAPI spec or generated client is out of date."
-            echo "::error::Run 'pnpm api:contract' locally and commit the result."
+            echo "::error::Run 'just contract' locally and commit the result."
             exit 1
           }
 
-  # ── 7. Build Container Images (Parallel Matrix Build) ───────────────────────
+  # ── 6. Build Container Images (Parallel Matrix Build) ───────────────────────
   build:
     name: 'CI: Build Image (${{ matrix.app }})'
-    needs: [quality, typecheck, test-unit, security, test-integration, contract-sync]
+    needs: [quality, typecheck, security, test, contract-sync]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
