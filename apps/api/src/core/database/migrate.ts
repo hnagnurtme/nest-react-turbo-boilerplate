@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
-import { getEnv } from '../../config';
+import { getEnv, loadEnvFile } from '../../config';
 
 /**
  * Resolves `apps/api/drizzle` whether this file runs from `src` (tsx, the
@@ -23,6 +23,7 @@ function migrationsFolder(): string {
  * altering the schema or dropping an RLS policy.
  */
 async function main(): Promise<void> {
+  loadEnvFile();
   const env = getEnv();
   const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL, max: 1 });
 

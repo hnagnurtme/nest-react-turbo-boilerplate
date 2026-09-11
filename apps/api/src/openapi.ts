@@ -3,7 +3,7 @@ import { dirname, resolve } from 'node:path';
 import { VersioningType } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { getEnv } from './config';
+import { getEnv, loadEnvFile } from './config';
 import { AppModule } from './app.module';
 
 /**
@@ -16,6 +16,7 @@ import { AppModule } from './app.module';
 const OUTPUT = resolve(__dirname, '../../../packages/api-contract/openapi.json');
 
 async function main(): Promise<void> {
+  loadEnvFile();
   const env = getEnv();
   const app = await NestFactory.create(AppModule, { logger: ['error'], abortOnError: false });
 

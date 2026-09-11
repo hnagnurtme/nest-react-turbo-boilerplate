@@ -1,7 +1,7 @@
 import argon2 from 'argon2';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import { Pool } from 'pg';
-import { getEnv } from '../../config';
+import { getEnv, loadEnvFile } from '../../config';
 import * as schema from './schema';
 
 /**
@@ -11,6 +11,7 @@ import * as schema from './schema';
  * rows without `app.tenant_id`, and the tenant does not exist yet at this point.
  */
 async function main(): Promise<void> {
+  loadEnvFile();
   const env = getEnv();
   const pool = new Pool({ connectionString: env.DATABASE_MIGRATION_URL, max: 1 });
   const db = drizzle(pool, { schema });

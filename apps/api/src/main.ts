@@ -8,23 +8,11 @@ import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { Logger } from 'nestjs-pino';
-import { validateEnv } from './config';
+import { loadEnvFile, validateEnv } from './config';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './core/filters/global-exception.filter';
 import { TransformInterceptor } from './core/interceptors/transform.interceptor';
 import { ZodValidationPipe } from './core/pipes/zod-validation.pipe';
-
-/**
- * Node reads `.env` itself (20.12+), which keeps dotenv out of the dependency
- * list and, more importantly, loads the file before `validateEnv` runs.
- */
-function loadEnvFile(): void {
-  try {
-    process.loadEnvFile?.();
-  } catch {
-    // No .env file: normal in container deployments where the env is injected.
-  }
-}
 
 loadEnvFile();
 

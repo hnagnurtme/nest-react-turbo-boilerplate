@@ -52,7 +52,14 @@ export const envSchema = z
     CSRF_COOKIE_NAME: z.string().default('csrf_token'),
 
     OTEL_SERVICE_NAME: z.string().default('api'),
-    OTEL_EXPORTER_OTLP_ENDPOINT: z.string().url().optional(),
+    // `z.string().url().optional()` only treats a MISSING key as absent — an
+    // empty string from a documented-blank .env line (the default, telemetry
+    // off) still fails .url() before .optional() gets a chance to skip it.
+    // Coerce '' to undefined first so leaving this unset actually works.
+    OTEL_EXPORTER_OTLP_ENDPOINT: z.preprocess(
+      (value) => (value === '' ? undefined : value),
+      z.string().url().optional(),
+    ),
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
   })
   .superRefine((env, ctx) => {
