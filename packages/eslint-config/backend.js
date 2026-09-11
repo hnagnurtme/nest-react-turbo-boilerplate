@@ -9,6 +9,19 @@ import { base } from './base.js';
 export const backend = [
   ...base,
   {
+    rules: {
+      // NestJS resolves constructor-injected classes at runtime via
+      // `emitDecoratorMetadata` (design:paramtypes). A class used ONLY as a
+      // constructor parameter type looks, to static analysis, like a
+      // type-only import — but rewriting it to `import type` erases the
+      // value TypeScript emits for reflection, and DI breaks at boot with
+      // "can't resolve dependencies" (learned the hard way; see git log).
+      // Safe everywhere else (packages/shared, apps/web) where nothing
+      // reads paramtypes at runtime, so this only overrides it here.
+      '@typescript-eslint/consistent-type-imports': 'off',
+    },
+  },
+  {
     plugins: { boundaries },
     settings: {
       'boundaries/include': ['src/**/*'],

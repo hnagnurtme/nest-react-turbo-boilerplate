@@ -19,7 +19,7 @@ export interface SubjectShapes {
   User: { id: string; tenantId?: string };
   Tenant: { id: string };
   Membership: { id: string; tenantId: string; userId: string };
-  Item: { id: string; tenantId: string; createdBy?: string };
+  Item: { id: string; tenantId: string; createdBy?: string | null };
   all: Record<string, unknown>;
 }
 
