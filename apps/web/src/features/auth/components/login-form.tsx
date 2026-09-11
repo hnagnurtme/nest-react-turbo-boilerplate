@@ -15,21 +15,23 @@ export function LoginForm() {
   const navigate = useNavigate();
 
   const login = useLogin({
-    onSuccess: (result) => {
-      setSession({
-        accessToken: result.accessToken,
-        csrfToken: result.csrfToken,
-        user: result.user,
-        memberships: result.memberships,
-      });
-      broadcastAuthEvent({ type: 'login' });
-      navigate('/', { replace: true });
+    mutation: {
+      onSuccess: (result) => {
+        setSession({
+          accessToken: result.accessToken,
+          csrfToken: result.csrfToken,
+          user: result.user,
+          memberships: result.memberships,
+        });
+        broadcastAuthEvent({ type: 'login' });
+        navigate('/', { replace: true });
+      },
     },
   });
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    login.mutate({ email, password });
+    login.mutate({ data: { email, password } });
   }
 
   // Same message for a wrong email and a wrong password (doc 03 section 4):

@@ -77,6 +77,11 @@ lint-fix:
 typecheck:
     pnpm typecheck
 
+# Typecheck repository scripts.
+[group('quality')]
+typecheck-scripts:
+    pnpm exec tsc --noEmit --project scripts/tsconfig.json
+
 # Prettier — write.
 [group('quality')]
 format:
@@ -110,6 +115,11 @@ coverage:
 [group('quality')]
 check-env:
     pnpm check:env
+
+# Audit production dependencies for vulnerabilities.
+[group('quality')]
+audit:
+    pnpm audit --prod --audit-level=high
 
 # Everything CI's `static` + `test` jobs check, run locally before you push.
 [group('quality')]

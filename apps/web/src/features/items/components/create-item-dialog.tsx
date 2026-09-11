@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { useCreateItem } from '@repo/api-contract';
+import { useQueryClient } from '@tanstack/react-query';
+import { getItemsQueryKey, useCreateItem } from '@repo/api-contract';
 import { Button } from '@repo/ui/primitives/button';
 import { Input } from '@repo/ui/primitives/input';
 import { Textarea } from '@repo/ui/primitives/textarea';
@@ -18,18 +19,22 @@ export function CreateItemDialog() {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const queryClient = useQueryClient();
 
   const createItem = useCreateItem({
-    onSuccess: () => {
-      setOpen(false);
-      setTitle('');
-      setDescription('');
+    mutation: {
+      onSuccess: () => {
+        void queryClient.invalidateQueries({ queryKey: getItemsQueryKey() });
+        setOpen(false);
+        setTitle('');
+        setDescription('');
+      },
     },
   });
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    createItem.mutate({ title, description: description || undefined });
+    createItem.mutate({ data: { title, description: description || undefined } });
   }
 
   // Field-level errors from a 422 map straight onto the form the same way

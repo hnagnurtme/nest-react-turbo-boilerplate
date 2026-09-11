@@ -12,13 +12,12 @@ import { defineConfig } from 'orval';
  */
 export default defineConfig({
   api: {
-    input: '../../apps/api/openapi.json',
+    input: './openapi.json',
     output: {
       target: 'src/generated/endpoints.ts',
       schemas: 'src/generated/models',
       client: 'react-query',
-      httpClient: 'fetch',
-      mode: 'tags-split',
+      mode: 'tags',
       override: {
         mutator: {
           path: 'src/http-mutator.ts',

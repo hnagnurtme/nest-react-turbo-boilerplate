@@ -9,9 +9,11 @@ export function Layout({ children }: { children: ReactNode }) {
   const clearSession = useSessionStore((s) => s.clearSession);
   const navigate = useNavigate();
   const logout = useLogout({
-    onSettled: () => {
-      clearSession();
-      navigate('/login', { replace: true });
+    mutation: {
+      onSettled: () => {
+        clearSession();
+        navigate('/login', { replace: true });
+      },
     },
   });
 

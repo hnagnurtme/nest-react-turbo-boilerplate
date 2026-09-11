@@ -14,6 +14,7 @@
 export interface ApiRequestConfig {
   url: string;
   method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  headers?: Record<string, string> | HeadersInit;
   params?: Record<string, unknown>;
   data?: unknown;
   paginated?: boolean;
