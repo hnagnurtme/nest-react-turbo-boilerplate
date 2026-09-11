@@ -1,0 +1,12 @@
+{
+  "extends": "@repo/tsconfig/react.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": false,
+    "declaration": true
+  },
+  "include": ["src/**/*"]
+}

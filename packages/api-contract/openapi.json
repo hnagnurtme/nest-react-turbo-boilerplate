@@ -1,0 +1,22 @@
+{
+  "openapi": "3.0.0",
+  "paths": {},
+  "info": {
+    "title": "API",
+    "description": "Multi-tenant API. Errors follow RFC 9457 (application/problem+json).",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "access-token": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {}
+  }
+}
