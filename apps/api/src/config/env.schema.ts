@@ -15,7 +15,7 @@ export const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     PORT: z.coerce.number().int().positive().default(3000),
-    API_PREFIX: z.string().default('api/v1'),
+    API_PREFIX: z.string().default('api'),
 
     DATABASE_URL: z.string().url(),
     /**
