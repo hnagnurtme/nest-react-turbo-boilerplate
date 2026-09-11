@@ -3,10 +3,8 @@ import type { ApiResponse } from '@repo/shared';
 import { env } from '@/config/env';
 import { useTokenStore } from '@/lib/auth/token-store';
 import { broadcastAuthEvent } from './broadcast';
-import { readCookie } from './cookies';
 import { toProblemError } from './problem-error';
 
-const CSRF_COOKIE_NAME = 'csrf_token';
 const CSRF_HEADER_NAME = 'x-csrf-token';
 
 /**
@@ -31,18 +29,18 @@ function buildUrl(url: string, params?: Record<string, unknown>): string {
 }
 
 async function rawRequest<T>(config: ApiRequestConfig, retried = false): Promise<T> {
-  const { accessToken } = useTokenStore.getState();
+  const { accessToken, csrfToken } = useTokenStore.getState();
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
   // Cross-site deployment (doc 03 section 2.1): the refresh cookie is
-  // SameSite=None, which opens a CSRF surface. Double-submit closes it on
-  // every state-changing call. GET requests carry no cookie-driven side
-  // effect, so the header is skipped for them to keep GETs cacheable.
-  if (config.method !== 'GET') {
-    const csrfToken = readCookie(CSRF_COOKIE_NAME);
-    if (csrfToken) headers[CSRF_HEADER_NAME] = csrfToken;
+  // SameSite=None, which opens a CSRF surface. The synchronizer token the
+  // server issued in the login/refresh response body closes it on every
+  // state-changing call — NOT read from a cookie, since document.cookie
+  // cannot see a cookie set by a different origin (see token-store.ts).
+  if (config.method !== 'GET' && csrfToken) {
+    headers[CSRF_HEADER_NAME] = csrfToken;
   }
 
   const response = await fetch(buildUrl(config.url, config.params), {
@@ -70,7 +68,7 @@ async function rawRequest<T>(config: ApiRequestConfig, retried = false): Promise
     }
 
     if (problem.status === 401) {
-      useTokenStore.getState().clearAccessToken();
+      useTokenStore.getState().clearTokens();
       broadcastAuthEvent({ type: 'logout' });
       onSessionExpired?.();
     }
@@ -98,21 +96,27 @@ function ensureRefreshed(): Promise<void> {
 }
 
 async function doRefresh(): Promise<void> {
+  // The refresh call itself is CSRF-exempt-by-necessity on the client side
+  // for the very first refresh after a hard reload (no csrfToken in memory
+  // yet); the server accepts this because /auth/refresh with no matching
+  // header simply 403s and the caller ends up logged out, same as any other
+  // invalid-session outcome — there is no ambient authority being forged.
+  const { csrfToken } = useTokenStore.getState();
   const response = await fetch(buildUrl('/auth/refresh'), {
     method: 'POST',
     credentials: 'include',
-    headers: { [CSRF_HEADER_NAME]: readCookie(CSRF_COOKIE_NAME) ?? '' },
+    headers: csrfToken ? { [CSRF_HEADER_NAME]: csrfToken } : {},
   });
 
   if (!response.ok) {
-    useTokenStore.getState().clearAccessToken();
+    useTokenStore.getState().clearTokens();
     broadcastAuthEvent({ type: 'logout' });
     onSessionExpired?.();
     throw new Error('Session expired');
   }
 
-  const body = (await response.json()) as ApiResponse<{ accessToken: string }>;
-  useTokenStore.getState().setAccessToken(body.data.accessToken);
+  const body = (await response.json()) as ApiResponse<{ accessToken: string; csrfToken: string }>;
+  useTokenStore.getState().setTokens(body.data);
 }
 
 configureApiContract(rawRequest);

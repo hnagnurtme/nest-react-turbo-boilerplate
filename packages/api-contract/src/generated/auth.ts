@@ -2,6 +2,7 @@
 import { useMutation, useQuery, type UseMutationOptions, type UseQueryOptions } from '@tanstack/react-query';
 import { apiMutator } from '../http-mutator';
 import type {
+  AccessTokenResponseDto,
   LoginDto,
   LoginResponseDto,
   MeResponseDto,
@@ -43,11 +44,11 @@ export function useMe(options?: Omit<UseQueryOptions<MeResponseDto>, 'queryKey' 
 }
 
 export function useSwitchTenant(
-  options?: UseMutationOptions<RefreshResponseDto, unknown, SwitchTenantDto>,
+  options?: UseMutationOptions<AccessTokenResponseDto, unknown, SwitchTenantDto>,
 ) {
   return useMutation({
     mutationFn: (data) =>
-      apiMutator<RefreshResponseDto>({ url: '/auth/switch-tenant', method: 'POST', data }),
+      apiMutator<AccessTokenResponseDto>({ url: '/auth/switch-tenant', method: 'POST', data }),
     ...options,
   });
 }

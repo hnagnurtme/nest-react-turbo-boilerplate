@@ -4,10 +4,10 @@ import type { MembershipDto, TenantDto, UserDto } from '@repo/api-contract';
 import { useTokenStore } from '@/lib/auth/token-store';
 
 /**
- * Identity and membership data, one layer above the raw token (doc 01
+ * Identity and membership data, one layer above the raw tokens (doc 01
  * section 2.2: entities may import lib, features may import entities).
- * `app/components` reads `user` from here; `lib/http` never does — it
- * only ever touches `lib/auth/token-store`.
+ * `app/components` reads `user` from here; `lib/http` never does — it only
+ * ever touches `lib/auth/token-store`.
  */
 interface SessionState {
   user: UserDto | null;
@@ -15,6 +15,7 @@ interface SessionState {
   activeTenantId: string | null;
   setSession: (input: {
     accessToken: string;
+    csrfToken: string;
     user: UserDto;
     memberships?: (MembershipDto & { tenant?: TenantDto })[];
   }) => void;
@@ -28,8 +29,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   memberships: [],
   activeTenantId: null,
 
-  setSession: ({ accessToken, user, memberships }) => {
-    useTokenStore.getState().setAccessToken(accessToken);
+  setSession: ({ accessToken, csrfToken, user, memberships }) => {
+    useTokenStore.getState().setTokens({ accessToken, csrfToken });
     set((state) => {
       const nextMemberships = memberships ?? state.memberships;
       return {
@@ -43,7 +44,7 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   setActiveTenant: (activeTenantId) => set({ activeTenantId }),
 
   clearSession: () => {
-    useTokenStore.getState().clearAccessToken();
+    useTokenStore.getState().clearTokens();
     set({ user: null, memberships: [], activeTenantId: null });
   },
 

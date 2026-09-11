@@ -26,7 +26,7 @@ export function useBootstrapAuth(): { isReady: boolean } {
           credentials: 'include',
         });
         if (!refreshRes.ok) throw new Error('no session');
-        const refreshBody = (await refreshRes.json()) as ApiResponse<{ accessToken: string }>;
+        const refreshBody = (await refreshRes.json()) as ApiResponse<{ accessToken: string; csrfToken: string }>;
 
         const meRes = await fetch(`${env.VITE_API_URL}/auth/me`, {
           headers: { Authorization: `Bearer ${refreshBody.data.accessToken}` },
@@ -38,6 +38,7 @@ export function useBootstrapAuth(): { isReady: boolean } {
         if (!cancelled) {
           setSession({
             accessToken: refreshBody.data.accessToken,
+            csrfToken: refreshBody.data.csrfToken,
             user: meBody.data.user,
             memberships: meBody.data.memberships,
           });

@@ -18,6 +18,7 @@ export function LoginForm() {
     onSuccess: (result) => {
       setSession({
         accessToken: result.accessToken,
+        csrfToken: result.csrfToken,
         user: result.user,
         memberships: result.memberships,
       });
