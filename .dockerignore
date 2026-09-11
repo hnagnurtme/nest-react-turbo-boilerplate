@@ -1,0 +1,42 @@
+# Everything here is either rebuilt inside the image, useless to it, or must
+# never enter it. Keeping the build context small is also the cheapest speedup
+# available: Docker hashes the whole context before it runs the first line.
+
+# Dependencies and build output — reinstalled/rebuilt in the image.
+**/node_modules
+.pnpm-store
+**/dist
+**/build
+**/.turbo
+**/.vite
+**/coverage
+**/*.tsbuildinfo
+
+# Secrets. A .env copied into an image is a secret published to everyone who can
+# pull it; .env.example is kept because it is a template with no real values.
+**/.env
+**/.env.*
+!**/.env.example
+
+# VCS and CI
+.git
+.gitignore
+.github
+
+# Internal planning docs — not part of the distributed boilerplate.
+doc
+
+# Editor / OS noise
+.idea
+.vscode
+**/.DS_Store
+**/*.log
+
+# Local-only infrastructure and deploy tooling.
+docker-compose.yml
+docker-compose.prod.yml
+docker-compose.*.yml
+**/Dockerfile
+**/.dockerignore
+README.md
+**/*.md

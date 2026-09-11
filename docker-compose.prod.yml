@@ -1,0 +1,150 @@
+# Production stack for a single VPS (doc 11 §0: VPS + Docker Compose).
+#
+#   docker compose -f docker-compose.prod.yml up -d
+#
+# Everything is configured from a `.env` file sitting next to this one on the
+# server. That file is the only place secrets exist on the host; it is never in
+# git. `scripts/deploy.sh` is the supported way to roll a new version out.
+#
+# TLS is terminated by the edge proxy on the host (nginx/Caddy/Traefik), which is
+# why the api and web ports below bind to 127.0.0.1 — nothing here is reachable
+# from the internet except through that proxy.
+
+name: ${PROJECT_NAME:-app}
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      # Postgres stores timestamps in UTC; make the session default match so a
+      # manual psql session reads the same values the app writes (doc 08 §9).
+      TZ: UTC
+    # No `ports:` on purpose. The database is reachable only over the compose
+    # network. Publishing 5432 on a VPS means publishing it to the internet.
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infra/postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    stop_grace_period: 60s
+    networks: [backend]
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    command:
+      [
+        'redis-server',
+        '--appendonly',
+        'yes',
+        '--requirepass',
+        '${REDIS_PASSWORD:?REDIS_PASSWORD is required}',
+      ]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli -a "$$REDIS_PASSWORD" ping | grep -q PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    stop_grace_period: 30s
+    networks: [backend]
+
+  api:
+    image: ${API_IMAGE:-api:latest}
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+    ports:
+      - '127.0.0.1:${API_PORT:-3000}:3000'
+    # Graceful shutdown (doc 08 §6) budgets 5s of draining plus a 30s deadline
+    # for in-flight requests. This must stay comfortably above that total, or
+    # Docker SIGKILLs the process mid-request and the deploy drops traffic.
+    stop_grace_period: 45s
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '5' }
+    networks: [backend]
+
+  web:
+    image: ${WEB_IMAGE:-web:latest}
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      # VITE_* is compiled into the bundle, so it belongs here and not in
+      # `environment:`. Changing it requires rebuilding the image.
+      args:
+        VITE_API_URL: ${VITE_API_URL:?VITE_API_URL is required at build time}
+        VITE_APP_NAME: ${VITE_APP_NAME:-app}
+    restart: always
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:${WEB_PORT:-8080}:80'
+    stop_grace_period: 20s
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--spider', 'http://127.0.0.1/health']
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options: { max-size: '10m', max-file: '5' }
+    networks: [backend]
+
+  # One-off migration runner. Not started by `up`; `scripts/deploy.sh` invokes it
+  # explicitly, before the new api containers take traffic.
+  migrate:
+    image: ${API_IMAGE:-api:latest}
+    profiles: [tools]
+    restart: 'no'
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+    # nest build mirrors src/ into dist/, so this is apps/api/src/core/database/migrate.ts.
+    command: ['node', 'dist/core/database/migrate.js']
+    networks: [backend]
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  backend:
+    driver: bridge
