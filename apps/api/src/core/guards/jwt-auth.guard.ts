@@ -1,4 +1,10 @@
-import { Inject, Injectable, UnauthorizedException, type CanActivate, type ExecutionContext } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnauthorizedException,
+  type CanActivate,
+  type ExecutionContext,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ERROR_CODES, type AuthContext } from '@repo/shared';
 import type { Request } from 'express';

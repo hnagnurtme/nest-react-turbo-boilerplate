@@ -6,7 +6,5 @@
     "module": "CommonJS",
     "moduleResolution": "Node"
   },
-  "include": [
-    "src/**/*"
-  ]
+  "include": ["src/**/*"]
 }

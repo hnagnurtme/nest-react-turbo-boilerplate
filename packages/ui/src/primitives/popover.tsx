@@ -10,7 +10,12 @@ export const PopoverClose = PopoverPrimitive.Close;
 
 export type PopoverContentProps = React.ComponentProps<typeof PopoverPrimitive.Content>;
 
-export function PopoverContent({ className, align = 'center', sideOffset = 4, ...props }: PopoverContentProps) {
+export function PopoverContent({
+  className,
+  align = 'center',
+  sideOffset = 4,
+  ...props
+}: PopoverContentProps) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content

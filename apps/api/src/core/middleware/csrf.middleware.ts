@@ -65,7 +65,9 @@ export class CsrfMiddleware implements NestMiddleware {
   }
 
   private assertSynchronizerToken(req: Request): void {
-    const refreshCookie = (req.cookies as Record<string, string> | undefined)?.[REFRESH_COOKIE_NAME];
+    const refreshCookie = (req.cookies as Record<string, string> | undefined)?.[
+      REFRESH_COOKIE_NAME
+    ];
     const presentedCsrf = req.header(CSRF_HEADER);
 
     if (!refreshCookie || !presentedCsrf) {

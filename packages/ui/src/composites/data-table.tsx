@@ -102,7 +102,9 @@ export function DataTable<T>({
                   >
                     {columns.map((column) => (
                       <TableCell key={column.key} className={column.className}>
-                        {column.render ? column.render(row, rowIndex) : defaultCell(row, column.key)}
+                        {column.render
+                          ? column.render(row, rowIndex)
+                          : defaultCell(row, column.key)}
                       </TableCell>
                     ))}
                   </TableRow>
@@ -111,7 +113,9 @@ export function DataTable<T>({
             {isEmpty ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={columns.length} className="p-0">
-                  {emptyState ?? <p className="py-10 text-center text-sm text-muted-foreground">No results.</p>}
+                  {emptyState ?? (
+                    <p className="py-10 text-center text-sm text-muted-foreground">No results.</p>
+                  )}
                 </TableCell>
               </TableRow>
             ) : null}

@@ -38,13 +38,19 @@ export type DropdownMenuItemProps = React.ComponentProps<typeof DropdownMenuPrim
   inset?: boolean;
 };
 
-export function DropdownMenuItem({ className, variant = 'default', inset, ...props }: DropdownMenuItemProps) {
+export function DropdownMenuItem({
+  className,
+  variant = 'default',
+  inset,
+  ...props
+}: DropdownMenuItemProps) {
   return (
     <DropdownMenuPrimitive.Item
       className={cn(
         itemClasses,
         inset && 'pl-8',
-        variant === 'destructive' && 'text-destructive focus:bg-destructive/10 focus:text-destructive',
+        variant === 'destructive' &&
+          'text-destructive focus:bg-destructive/10 focus:text-destructive',
         className,
       )}
       {...props}
@@ -90,18 +96,33 @@ export function DropdownMenuLabel({
   className,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Label>) {
-  return <DropdownMenuPrimitive.Label className={cn('px-2 py-1.5 text-sm font-semibold', className)} {...props} />;
+  return (
+    <DropdownMenuPrimitive.Label
+      className={cn('px-2 py-1.5 text-sm font-semibold', className)}
+      {...props}
+    />
+  );
 }
 
 export function DropdownMenuSeparator({
   className,
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) {
-  return <DropdownMenuPrimitive.Separator className={cn('-mx-1 my-1 h-px bg-border', className)} {...props} />;
+  return (
+    <DropdownMenuPrimitive.Separator
+      className={cn('-mx-1 my-1 h-px bg-border', className)}
+      {...props}
+    />
+  );
 }
 
 export function DropdownMenuShortcut({ className, ...props }: React.ComponentProps<'span'>) {
-  return <span className={cn('ml-auto text-xs tracking-widest text-muted-foreground', className)} {...props} />;
+  return (
+    <span
+      className={cn('ml-auto text-xs tracking-widest text-muted-foreground', className)}
+      {...props}
+    />
+  );
 }
 
 export function DropdownMenuSubTrigger({

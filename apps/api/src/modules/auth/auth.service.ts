@@ -95,7 +95,10 @@ export class AuthService {
   }
 
   /** Mints a fresh access token, defaulting to the user's first active tenant. */
-  private issueAccessToken(user: Pick<User, 'id' | 'platformRole'>, memberships: SessionMembership[]): string {
+  private issueAccessToken(
+    user: Pick<User, 'id' | 'platformRole'>,
+    memberships: SessionMembership[],
+  ): string {
     const active = memberships[0];
     return this.tokens.signAccessToken({
       sub: user.id,
@@ -110,7 +113,10 @@ export class AuthService {
    * to the caller and never stored — only its hash is, so a database leak
    * does not hand over live sessions (doc 03 section 3).
    */
-  private async issueRefreshToken(userId: string, meta: { userAgent?: string; ip?: string }): Promise<string> {
+  private async issueRefreshToken(
+    userId: string,
+    meta: { userAgent?: string; ip?: string },
+  ): Promise<string> {
     const raw = randomBytes(32).toString('hex');
     await this.tx.raw.insert(refreshTokens).values({
       userId,
@@ -130,7 +136,9 @@ export class AuthService {
   ): Promise<LoginResult> {
     const [user] = await this.tx.raw.select().from(users).where(eq(users.email, email)).limit(1);
 
-    const valid = await argon2.verify(user?.passwordHash ?? DUMMY_HASH, password).catch(() => false);
+    const valid = await argon2
+      .verify(user?.passwordHash ?? DUMMY_HASH, password)
+      .catch(() => false);
     if (!user || !valid) throw new InvalidCredentialsError();
 
     const userMemberships = await this.loadMemberships(user.id);
@@ -171,13 +179,20 @@ export class AuthService {
         .update(refreshTokens)
         .set({ revokedAt: new Date() })
         .where(and(eq(refreshTokens.familyId, existing.familyId), isNull(refreshTokens.revokedAt)));
-      this.logger.warn({ userId: existing.userId, familyId: existing.familyId }, 'Refresh token reuse detected');
+      this.logger.warn(
+        { userId: existing.userId, familyId: existing.familyId },
+        'Refresh token reuse detected',
+      );
       throw new TokenReuseDetectedError();
     }
 
     if (isExpired(existing.expiresAt)) throw new RefreshTokenInvalidError();
 
-    const [user] = await this.tx.raw.select().from(users).where(eq(users.id, existing.userId)).limit(1);
+    const [user] = await this.tx.raw
+      .select()
+      .from(users)
+      .where(eq(users.id, existing.userId))
+      .limit(1);
     if (!user) throw new RefreshTokenInvalidError();
 
     const nextRaw = randomBytes(32).toString('hex');
@@ -206,7 +221,11 @@ export class AuthService {
     const userMemberships = await this.loadMemberships(user.id);
     const accessToken = this.issueAccessToken(user, userMemberships);
 
-    return { accessToken, refreshToken: nextRaw, csrfToken: deriveCsrfToken(this.config.jwt.refreshSecret, nextRaw) };
+    return {
+      accessToken,
+      refreshToken: nextRaw,
+      csrfToken: deriveCsrfToken(this.config.jwt.refreshSecret, nextRaw),
+    };
   }
 
   /** Revokes only the presented token's own family, not every session the user has. */
@@ -225,7 +244,10 @@ export class AuthService {
       .where(and(eq(refreshTokens.familyId, existing.familyId), isNull(refreshTokens.revokedAt)));
   }
 
-  async me(userId: string): Promise<{ user: Pick<User, 'id' | 'email' | 'platformRole'>; memberships: SessionMembership[] }> {
+  async me(userId: string): Promise<{
+    user: Pick<User, 'id' | 'email' | 'platformRole'>;
+    memberships: SessionMembership[];
+  }> {
     const [user] = await this.tx.raw.select().from(users).where(eq(users.id, userId)).limit(1);
     // Should not happen in practice: userId comes from a verified JWT. If it
     // does, the user was deleted after the token was issued.

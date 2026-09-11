@@ -7,6 +7,8 @@ export const updateItemSchema = z
     description: z.string().trim().max(2000).optional(),
     status: z.enum(ITEM_STATUSES).optional(),
   })
-  .refine((value) => Object.keys(value).length > 0, { message: 'At least one field must be provided' });
+  .refine((value) => Object.keys(value).length > 0, {
+    message: 'At least one field must be provided',
+  });
 
 export type UpdateItemDto = z.infer<typeof updateItemSchema>;

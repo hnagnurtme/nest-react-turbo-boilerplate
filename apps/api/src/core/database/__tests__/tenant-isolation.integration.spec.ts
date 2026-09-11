@@ -78,8 +78,14 @@ describe('tenant isolation (RLS)', () => {
     await ownerDb.delete(items);
     await ownerDb.delete(tenants);
 
-    const [a] = await ownerDb.insert(tenants).values({ name: 'Tenant A', slug: 'tenant-a' }).returning();
-    const [b] = await ownerDb.insert(tenants).values({ name: 'Tenant B', slug: 'tenant-b' }).returning();
+    const [a] = await ownerDb
+      .insert(tenants)
+      .values({ name: 'Tenant A', slug: 'tenant-a' })
+      .returning();
+    const [b] = await ownerDb
+      .insert(tenants)
+      .values({ name: 'Tenant B', slug: 'tenant-b' })
+      .returning();
     if (!a || !b) throw new Error('seed failed');
     tenantA = a.id;
     tenantB = b.id;

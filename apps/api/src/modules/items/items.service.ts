@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { ForbiddenError, subject } from '@casl/ability';
-import { buildPaginationMeta, defineAbilityFor, type AuthContext, type PaginatedData } from '@repo/shared';
+import {
+  buildPaginationMeta,
+  defineAbilityFor,
+  type AuthContext,
+  type PaginatedData,
+} from '@repo/shared';
 import type { PageQuery } from '../../common/dto/page-query.dto';
 import { ResourceNotFoundError } from '../../core/errors';
 import type { Item } from '../../core/database/schema';

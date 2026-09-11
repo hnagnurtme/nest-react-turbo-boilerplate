@@ -86,7 +86,8 @@ export const envSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['JWT_REFRESH_SECRET'],
-        message: 'Must differ from JWT_ACCESS_SECRET so a leaked access secret cannot mint refresh tokens',
+        message:
+          'Must differ from JWT_ACCESS_SECRET so a leaked access secret cannot mint refresh tokens',
       });
     }
 

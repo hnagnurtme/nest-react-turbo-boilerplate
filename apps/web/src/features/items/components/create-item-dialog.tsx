@@ -52,7 +52,12 @@ export function CreateItemDialog() {
           </DialogHeader>
           <FormField label="Title" error={titleError}>
             {(control) => (
-              <Input {...control} required value={title} onChange={(e) => setTitle(e.target.value)} />
+              <Input
+                {...control}
+                required
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
             )}
           </FormField>
           <FormField label="Description">

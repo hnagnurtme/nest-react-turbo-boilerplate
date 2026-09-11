@@ -34,8 +34,7 @@ export function LoginForm() {
 
   // Same message for a wrong email and a wrong password (doc 03 section 4):
   // the backend already returns one INVALID_CREDENTIALS code for both.
-  const errorMessage =
-    login.error instanceof ProblemError ? login.error.problem.detail : undefined;
+  const errorMessage = login.error instanceof ProblemError ? login.error.problem.detail : undefined;
 
   return (
     <form onSubmit={handleSubmit} className="flex w-full max-w-sm flex-col gap-4">

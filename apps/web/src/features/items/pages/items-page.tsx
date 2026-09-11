@@ -47,7 +47,11 @@ export function ItemsPage() {
             header: '',
             className: 'text-right',
             render: (item) => (
-              <Can I="delete" a="Item" this={subject('Item', { id: item.id, tenantId: item.tenantId })}>
+              <Can
+                I="delete"
+                a="Item"
+                this={subject('Item', { id: item.id, tenantId: item.tenantId })}
+              >
                 <Button variant="ghost" size="sm" onClick={() => setPendingDelete(item)}>
                   Delete
                 </Button>

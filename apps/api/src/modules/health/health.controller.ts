@@ -1,4 +1,10 @@
-import { Controller, Get, Inject, ServiceUnavailableException, VERSION_NEUTRAL } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Inject,
+  ServiceUnavailableException,
+  VERSION_NEUTRAL,
+} from '@nestjs/common';
 import { sql } from 'drizzle-orm';
 import { Public } from '../../core/decorators';
 import { NoEnvelope } from '../../core/decorators';

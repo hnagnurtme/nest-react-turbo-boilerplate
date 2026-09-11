@@ -30,7 +30,9 @@ export function EmptyState({ icon, title, description, action, className }: Empt
       ) : null}
       <div className="flex flex-col gap-1">
         <p className="text-sm font-medium text-foreground">{title}</p>
-        {description ? <p className="max-w-sm text-sm text-muted-foreground">{description}</p> : null}
+        {description ? (
+          <p className="max-w-sm text-sm text-muted-foreground">{description}</p>
+        ) : null}
       </div>
       {action ? <div className="mt-1">{action}</div> : null}
     </div>

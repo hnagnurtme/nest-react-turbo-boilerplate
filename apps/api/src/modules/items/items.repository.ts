@@ -21,7 +21,9 @@ export class ItemsRepository {
   async list(query: PageQuery): Promise<{ rows: Item[]; total: number }> {
     return this.tx.runInTenantContext(async (tx) => {
       const sort = parseSort(query.sort, SORTABLE_FIELDS);
-      const orderColumn = sort ? SORT_COLUMNS[sort.field as keyof typeof SORT_COLUMNS] : items.createdAt;
+      const orderColumn = sort
+        ? SORT_COLUMNS[sort.field as keyof typeof SORT_COLUMNS]
+        : items.createdAt;
       const orderFn = sort?.direction === 'asc' ? asc : desc;
 
       const [rows, countRows] = await Promise.all([

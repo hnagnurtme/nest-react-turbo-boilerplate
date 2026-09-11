@@ -67,7 +67,11 @@ function titleFromCode(code: ErrorCode): string {
 }
 
 function hasStringProp<K extends string>(value: unknown, key: K): value is Record<K, string> {
-  return typeof value === 'object' && value !== null && typeof (value as Record<K, unknown>)[key] === 'string';
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as Record<K, unknown>)[key] === 'string'
+  );
 }
 
 /**

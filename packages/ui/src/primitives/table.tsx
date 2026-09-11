@@ -19,7 +19,9 @@ export function TableBody({ className, ...props }: React.ComponentProps<'tbody'>
 }
 
 export function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
-  return <tfoot className={cn('border-t border-border bg-muted/50 font-medium', className)} {...props} />;
+  return (
+    <tfoot className={cn('border-t border-border bg-muted/50 font-medium', className)} {...props} />
+  );
 }
 
 export function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
@@ -38,7 +40,10 @@ export function TableHead({ className, scope = 'col', ...props }: React.Componen
   return (
     <th
       scope={scope}
-      className={cn('h-10 px-3 text-left align-middle text-xs font-medium text-muted-foreground', className)}
+      className={cn(
+        'h-10 px-3 text-left align-middle text-xs font-medium text-muted-foreground',
+        className,
+      )}
       {...props}
     />
   );

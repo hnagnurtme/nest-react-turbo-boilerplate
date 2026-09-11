@@ -1,4 +1,13 @@
-import { index, integer, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 export const IDEMPOTENCY_STATUSES = ['PROCESSING', 'COMPLETED'] as const;
 export type IdempotencyStatus = (typeof IDEMPOTENCY_STATUSES)[number];

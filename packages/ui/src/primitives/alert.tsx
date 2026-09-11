@@ -9,8 +9,10 @@ export const alertVariants = cva(
     variants: {
       variant: {
         default: 'border-border bg-card text-card-foreground',
-        destructive: 'border-destructive/50 bg-destructive/10 text-destructive [&>svg]:text-destructive',
-        warning: 'border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-200 [&>svg]:text-amber-600',
+        destructive:
+          'border-destructive/50 bg-destructive/10 text-destructive [&>svg]:text-destructive',
+        warning:
+          'border-amber-500/50 bg-amber-500/10 text-amber-900 dark:text-amber-200 [&>svg]:text-amber-600',
       },
     },
     defaultVariants: { variant: 'default' },
@@ -31,7 +33,9 @@ export function Alert({ className, variant, ...props }: AlertProps) {
 }
 
 export function AlertTitle({ className, ...props }: React.ComponentProps<'h5'>) {
-  return <h5 className={cn('mb-1 font-medium leading-none tracking-tight', className)} {...props} />;
+  return (
+    <h5 className={cn('mb-1 font-medium leading-none tracking-tight', className)} {...props} />
+  );
 }
 
 export function AlertDescription({ className, ...props }: React.ComponentProps<'div'>) {
