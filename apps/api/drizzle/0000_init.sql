@@ -165,10 +165,19 @@ ALTER TABLE "memberships" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
 ALTER TABLE "memberships" FORCE ROW LEVEL SECURITY;
 --> statement-breakpoint
+-- A user's own membership list is, by definition, a cross-tenant read (they
+-- do not yet know which tenant to scope to) -- the second USING clause lets
+-- a request bound only to app.user_id (TransactionManager.runAsUser, used by
+-- auth's login/me/switch-tenant) see its own rows without granting it every
+-- other tenant's. WITH CHECK stays tenant-only: nothing should ever INSERT
+-- or UPDATE a membership outside a real tenant context.
 CREATE POLICY "tenant_isolation" ON "memberships"
 	FOR ALL
 	TO app_runtime
-	USING      (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid)
+	USING (
+		tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid
+		OR user_id = NULLIF(current_setting('app.user_id', true), '')::uuid
+	)
 	WITH CHECK (tenant_id = NULLIF(current_setting('app.tenant_id', true), '')::uuid);
 --> statement-breakpoint
 
