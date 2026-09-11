@@ -28,10 +28,10 @@ install:
 bootstrap:
     pnpm bootstrap
 
-# Install, start infra, apply the schema. Run `just bootstrap` first (interactive, not chained here).
+# Install, start infra, migrate, seed dev data. Run `just bootstrap` first (interactive, not chained here).
 [group('setup')]
-fresh: install up db-migrate
-    @echo "Ready. Run 'just dev' to start the API and web app."
+fresh: install up db-migrate db-seed
+    @echo "Ready. Log in with owner@example.com / password123. Run 'just dev' to start the API and web app."
 
 # ── Development ───────────────────────────────────────────────────────────────
 

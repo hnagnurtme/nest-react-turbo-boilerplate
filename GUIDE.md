@@ -16,18 +16,19 @@ just dev         # API + web, both in watch mode
 
 The recipes you'll use most:
 
-| Command                                | Does                                                                                                                  |
-| :------------------------------------- | :-------------------------------------------------------------------------------------------------------------------- |
-| `just dev`                             | Start infra (if not running) + both apps, watch mode                                                                  |
-| `just dev-api` / `just dev-web`        | Start just one side                                                                                                   |
-| `just check`                           | Everything CI checks — lint, typecheck, format, env drift, both test suites, coverage gate. Run this before you push. |
-| `just new-module <name>`               | Scaffold a backend feature slice from `items`                                                                         |
-| `just contract`                        | Regenerate the OpenAPI spec + typed client after changing an endpoint                                                 |
-| `just db-migrate` / `just db-generate` | Apply / create a migration                                                                                            |
-| `just db-studio`                       | Browse the database                                                                                                   |
-| `just db-shell`                        | `psql` into the local container                                                                                       |
-| `just up` / `just down`                | Local Postgres + Redis containers                                                                                     |
-| `just doctor`                          | Sanity-check your local setup                                                                                         |
+| Command                                | Does                                                                                                                     |
+| :------------------------------------- | :----------------------------------------------------------------------------------------------------------------------- |
+| `just dev`                             | Start infra (if not running) + both apps, watch mode                                                                     |
+| `just dev-api` / `just dev-web`        | Start just one side                                                                                                      |
+| `just check`                           | Everything CI checks — lint, typecheck, format, env drift, both test suites, coverage gate. Run this before you push.    |
+| `just new-module <name>`               | Scaffold a backend feature slice from `items`                                                                            |
+| `just contract`                        | Regenerate the OpenAPI spec + typed client after changing an endpoint                                                    |
+| `just db-migrate` / `just db-generate` | Apply / create a migration                                                                                               |
+| `just db-seed`                         | One tenant, one login (`owner@example.com` / `password123`), one item. Safe to skip; not run automatically by `just up`. |
+| `just db-studio`                       | Browse the database                                                                                                      |
+| `just db-shell`                        | `psql` into the local container                                                                                          |
+| `just up` / `just down`                | Local Postgres + Redis containers                                                                                        |
+| `just doctor`                          | Sanity-check your local setup                                                                                            |
 
 `just` is a thin wrapper — every recipe just shells out to the `pnpm`/`docker compose` command documented in `README.md`'s command table. If `just` isn't installed, everything still works directly through `pnpm`.
 

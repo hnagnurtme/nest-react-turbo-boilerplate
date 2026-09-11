@@ -49,13 +49,15 @@ pnpm install                     # 1. install the workspace
 pnpm bootstrap                   # 2. name the project, generate secrets, write .env files
 docker compose up -d             # 3. start PostgreSQL 16 + Redis 7
 pnpm db:migrate                  # 4. create the schema, roles and RLS policies
-pnpm dev                         # 5. API and web, both in watch mode
+pnpm db:seed                     # 5. optional: one tenant, one login, one item
+pnpm dev                         # 6. API and web, both in watch mode
 ```
 
-With [`just`](https://github.com/casey/just) installed, steps 1 and 3–5 collapse to `just fresh` (run `just bootstrap` yourself in between, since it's interactive) followed by `just dev`.
+With [`just`](https://github.com/casey/just) installed, steps 1 and 3–6 collapse to `just fresh` (run `just bootstrap` yourself in between, since it's interactive) followed by `just dev`.
 
 - API: <http://localhost:3000>
 - Web: <http://localhost:5173>
+- If you ran `pnpm db:seed` (or `just fresh`, which runs it for you): log in with `owner@example.com` / `password123`.
 
 `pnpm bootstrap` asks for a project name, generates every secret with `crypto.randomBytes`, and creates a `.env` from each `.env.example`. It **never overwrites an existing `.env`**, so it is safe to re-run. When it finishes it prints the short list of things it cannot decide for you — domains, CORS origins, the observability endpoint, TLS.
 
